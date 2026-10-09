@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="styles.css">
+  <title>Handoff Prototype</title>
+</head>
+<body>
+
+  <!-- STEP 1: PICK A SCHOOL OR LOG IN -->
+  <div id="screen-welcome" class="screen active">
+    <div class="card" style="text-align: center;">
+      <h1>Welcome to Handoff</h1>
+      <p style="margin-top: 0.5rem; color: #666;">Peer support and course materials passed down.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>New User</h3>
+        <label for="school-select">Pick your university:</label>
+        <select id="school-select">
+          <option value="Boston College">Boston College (Default)</option>
+          <option value="Harvard">Harvard</option>
+          <option value="MIT">MIT</option>
+          <option value="Northeastern">Northeastern</option>
+        </select>
+        <button onclick="selectSchool()">Continue</button>
+      </div>
+
+      <div class="card">
+        <h3>Existing Account (*)</h3>
+        <p style="font-size: 0.875rem; color: #666; margin-bottom: 1rem;">Already assigned or set up? Jump straight back in.</p>
+        <input type="text" placeholder="Username (Any value)">
+        <input type="password" placeholder="Password (Any value)">
+        <button class="secondary" onclick="loginDirect('student')">Student Chat Log In (*)</button>
+        <button class="secondary" onclick="loginDirect('mentor')">Mentor Log In (*)</button>
+        <button class="secondary" onclick="loginDirect('professor')">Professor Log In (*)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MASCOT TRANSITION SCREEN -->
+  <div id="mascot-screen" class="screen">
+    <div class="mascot-icon">🦅</div>
+    <h2 id="mascot-text" style="margin-top: 1rem;">Go Boston College Eagles!</h2>
+    <p style="color: #666;">Loading options...</p>
+  </div>
+
+  <!-- STEP 2: SELECT USER TYPE (3 Options) -->
+  <div id="screen-roles" class="screen">
+    <h2>I am a...</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>Current Student</h3>
+        <p>Get a mentor, advice, or textbooks for your upcoming classes.</p>
+        <button onclick="showScreen('screen-student-reg')">Register as Student</button>
+      </div>
+
+      <div class="card">
+        <h3>Mentor</h3>
+        <p>Help underclassmen navigate courses you've previously taken.</p>
+        <button onclick="showScreen('screen-mentor-reg')">Register as Mentor</button>
+      </div>
+
+      <div class="card">
+        <h3>Professor</h3>
+        <p>Manage course listings, textbooks, and approve student mentors.</p>
+        <button onclick="showScreen('screen-prof-reg')">Professor Sign Up</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGISTER: STUDENT -->
+  <div id="screen-student-reg" class="screen">
+    <div class="card">
+      <h2>Student Registration</h2>
+      <label>Select Course & Professor:</label>
+      <select>
+        <option>MK121: Marketing 101 - Prof. Smith</option>
+        <option>CS101: Intro to Computer Science - Prof. Johnson</option>
+        <option>EC101: Microeconomics - Prof. Davis</option>
+      </select>
+
+      <label>Required Textbook:</label>
+      <select>
+        <option>Principles of Marketing (15th Ed)</option>
+        <option>None / Not Applicable</option>
+      </select>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="anon-student">
+        <label for="anon-student">I want to stay anonymous</label>
+      </div>
+
+      <label>What do you need?</label>
+      <select id="student-need">
+        <option value="mentor">I need a mentor</option>
+        <option value="mentor-book">I need a mentor and a book</option>
+      </select>
+
+      <button onclick="finishRegistration('student')">Submit for Professor Approval</button>
+      <button class="secondary" onclick="showScreen('screen-roles')">Back</button>
+    </div>
+  </div>
+
+  <!-- REGISTER: MENTOR -->
+  <div id="screen-mentor-reg" class="screen">
+    <div class="card">
+      <h2>Mentor Registration</h2>
+      <label>Class you've taken & Professor:</label>
+      <select>
+        <option>MK121: Marketing 101 - Prof. Smith</option>
+        <option>CS101: Intro to Computer Science - Prof. Johnson</option>
+      </select>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="donate-check" onchange="toggleBookDonate(this)">
+        <label for="donate-check">I can donate a textbook (Optional)</label>
+      </div>
+
+      <div id="donate-book-section" style="display: none;">
+        <label>Select textbook to donate:</label>
+        <select>
+          <option>Principles of Marketing (15th Ed)</option>
+          <option>Marketing Analytics Handbook</option>
+        </select>
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="anon-mentor">
+        <label for="anon-mentor">I want to stay anonymous</label>
+      </div>
+
+      <button onclick="finishRegistration('mentor')">Submit for Professor Approval</button>
+      <button class="secondary" onclick="showScreen('screen-roles')">Back</button>
+    </div>
+  </div>
+
+  <!-- REGISTER: PROFESSOR -->
+  <div id="screen-prof-reg" class="screen">
+    <div class="card">
+      <h2>Professor Sign Up</h2>
+      <label>Course Name & Number:</label>
+      <input type="text" placeholder="e.g. MK121: Marketing 101">
+
+      <label>Required Textbook(s):</label>
+      <input type="text" placeholder="e.g. Principles of Marketing (15th Ed)">
+
+      <button onclick="finishRegistration('professor')">Create Course & Account</button>
+      <button class="secondary" onclick="showScreen('screen-roles')">Back</button>
+    </div>
+  </div>
+
+  <!-- MAIN APP DASHBOARD (STUDENT & MENTOR VIEW) -->
+  <div id="screen-app" class="screen" style="max-width: 1000px;">
+    <div class="app-container">
+      <div class="sidebar">
+        <div>
+          <!-- Dual Role Switcher -->
+          <div class="role-switcher">
+            <small>Active View:</small>
+            <select id="role-toggle" onchange="switchRoleView(this.value)">
+              <option value="mentee">Mentee View</option>
+              <option value="mentor">Mentor View</option>
+            </select>
+          </div>
+
+          <div class="nav-item active">💬 Chat System</div>
+          <div class="nav-item" onclick="showScreen('screen-settings')">⚙️ Settings</div>
+        </div>
+
+        <div style="font-size: 0.8rem; color: #666;">
+          School: <strong id="current-school-display">Boston College</strong>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div id="chat-header">
+          <h2 id="dashboard-title">Mentee Dashboard</h2>
+          <p id="chat-status" style="color: #666; margin-bottom: 1rem;">Status: Connected to Peer (Anonymous)</p>
+        </div>
+
+        <!-- Chatting System Placeholder -->
+        <div class="chat-box" id="chat-messages">
+          <div class="chat-msg">Hello! I'm your assigned peer mentor for Marketing 101.</div>
+          <div class="chat-msg user">Hi! Thanks for connecting. Do you still have the textbook?</div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" id="chat-input" placeholder="Type an anonymous message..." style="margin:0;">
+          <button style="width: 100px; margin:0;" onclick="sendMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFESSOR DASHBOARD -->
+  <div id="screen-prof-dash" class="screen" style="max-width: 900px;">
+    <div class="card">
+      <h2>Professor Management Portal</h2>
+      <p style="color: #666;">School: <strong id="prof-school-display">Boston College</strong> | <a href="#" onclick="showScreen('screen-settings')">Change School Settings</a></p>
+    </div>
+
+    <div class="grid">
+      <!-- Approvals Section -->
+      <div class="card">
+        <h3>Pending Approvals</h3>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 1rem;">Approve student mentor applications to verify credibility.</p>
+        
+        <div style="border-bottom: 1px solid var(--border); padding: 0.5rem 0;">
+          <strong>Alex Chen</strong> (Mentor)
+          <br><small>Course: MK121 | Donating Book: Yes</small>
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <button style="padding: 0.25rem; font-size: 0.8rem;" onclick="this.parentElement.parentElement.remove()">Approve</button>
+            <button class="secondary" style="padding: 0.25rem; font-size: 0.8rem;" onclick="this.parentElement.parentElement.remove()">Reject</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Course & Textbook Editor Section -->
+      <div class="card">
+        <h3>Edit Course & Textbooks</h3>
+        <label>Course Number:</label>
+        <input type="text" value="MK121: Marketing 101">
+
+        <label>Assigned Textbooks:</label>
+        <input type="text" value="Principles of Marketing (15th Ed)">
+
+        <button class="gold">Save Changes</button>
+        <button style="margin-top: 0.5rem;">+ Add More Courses</button>
+      </div>
+    </div>
+
+    <button class="secondary" onclick="showScreen('screen-welcome')" style="margin-top: 1rem;">Log Out</button>
+  </div>
+
+  <!-- SETTINGS: SWITCH SCHOOL -->
+  <div id="screen-settings" class="screen">
+    <div class="card">
+      <h2>Settings</h2>
+      <label for="switch-school-select">Switch School / Institution:</label>
+      <select id="switch-school-select">
+        <option value="Boston College">Boston College</option>
+        <option value="Harvard">Harvard</option>
+        <option value="MIT">MIT</option>
+        <option value="Northeastern">Northeastern</option>
+      </select>
+
+      <button onclick="saveSchoolSetting()">Save & Apply</button>
+      <button class="secondary" onclick="goBackFromSettings()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- FOOTER: NON-FUNCTIONAL SOCIAL / CONTACT LINKS -->
+  <footer>
+    <a href="#" onclick="alert('Social media link placeholder (Not yet active)')">Social Media</a> | 
+    <a href="#" onclick="alert('Contact us for partnerships placeholder (Not yet active)')">Contact Us (Partnerships)</a>
+  </footer>
+
+  <script>
+    let currentSchool = "Boston College";
+    let previousScreen = "screen-welcome";
+
+    // Helper: Show specific screen ID
+    function showScreen(screenId) {
+      if (document.querySelector('.screen.active')) {
+        previousScreen = document.querySelector('.screen.active').id;
+      }
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    // Step 1: School Picker with Mascot Transition
+    function selectSchool() {
+      currentSchool = document.getElementById('school-select').value;
+      
+      // Customize Mascot Transition
+      const mascotText = document.getElementById('mascot-text');
+      if (currentSchool === "Boston College") {
+        mascotText.innerText = "Go Boston College Eagles! 🦅";
+      } else {
+        mascotText.innerText = `Connecting to ${currentSchool}... 🎓`;
+      }
+
+      showScreen('mascot-screen');
+      setTimeout(() => {
+        updateSchoolDisplays();
+        showScreen('screen-roles');
+      }, 1200);
+    }
+
+    // Toggle Textbook Donation Option
+    function toggleBookDonate(checkbox) {
+      document.getElementById('donate-book-section').style.display = checkbox.checked ? 'block' : 'none';
+    }
+
+    // Registration Handler Placeholder
+    function finishRegistration(role) {
+      alert("Registration submitted! (Placeholder - bypassing real authentication & approval logic)");
+      if (role === 'professor') {
+        showScreen('screen-prof-dash');
+      } else {
+        showScreen('screen-app');
+      }
+    }
+
+    // Direct Login Bypass (*)
+    function loginDirect(role) {
+      updateSchoolDisplays();
+      if (role === 'professor') {
+        showScreen('screen-prof-dash');
+      } else {
+        showScreen('screen-app');
+      }
+    }
+
+    // Side-bar Role Switcher (Mentor vs Mentee)
+    function switchRoleView(role) {
+      const title = document.getElementById('dashboard-title');
+      if (role === 'mentor') {
+        title.innerText = "Mentor Dashboard";
+      } else {
+        title.innerText = "Mentee Dashboard";
+      }
+    }
+
+    // Chat Box Placeholder
+    function sendMessage() {
+      const input = document.getElementById('chat-input');
+      if (!input.value.trim()) return;
+
+      const chatBox = document.getElementById('chat-messages');
+      const newMsg = document.createElement('div');
+      newMsg.className = 'chat-msg user';
+      newMsg.innerText = input.value;
+      chatBox.appendChild(newMsg);
+      
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Settings & School Management
+    function updateSchoolDisplays() {
+      document.getElementById('current-school-display').innerText = currentSchool;
+      document.getElementById('prof-school-display').innerText = currentSchool;
+    }
+
+    function saveSchoolSetting() {
+      currentSchool = document.getElementById('switch-school-select').value;
+      updateSchoolDisplays();
+      alert(`School updated to ${currentSchool}!`);
+      goBackFromSettings();
+    }
+
+    function goBackFromSettings() {
+      showScreen(previousScreen === 'screen-settings' ? 'screen-app' : previousScreen);
+    }
+  </script>
+</body>
+</html>
